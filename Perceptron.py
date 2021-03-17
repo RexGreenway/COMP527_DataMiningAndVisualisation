@@ -4,16 +4,31 @@ import matplotlib.pyplot as plt
 
 class Perceptron():
     """
-    Perceptron classifier.
+    Perceptron class.
 
     Parameters
     ------------
+    trainingData : NumPy Array
+        asdasd
+    testData : NumPy Array
+        sfsdfd
 
     Attributes
-    -----------
+    ----------
+    weights : NumPy Array
+        asfd
+    bias : float
+        asfddas
+    
+    Notes
+    -----
+    asdasd
 
     """
     def __init__(self, trainingData, testData):
+        """
+        Initialises the Perceptron class with given data.
+        """
         self.trainingData = trainingData
         self.testData = testData
 
@@ -25,11 +40,20 @@ class Perceptron():
         """
         Fit training data.
 
+        Parameters
+        ----------
+        MaxIter : int
+            awjhkghd
+
+        Returns
+        -------
+        errors : NumPy Array
+            afhdjk
         """
         # Establish iterations over teh training data
-        errors = []
+        errors = np.zeros(MaxIter)
 
-        for _ in range(MaxIter):
+        for i in range(MaxIter):
             
             # Count errors for this iteration
             error = 0
@@ -51,13 +75,18 @@ class Perceptron():
                     self.bias += y                      # update bias
                     self.weights[:] += y * X[:]         # update weights
             
-            errors.append(error)
+            errors[i] = error
         
         return errors
 
     def PerceptronTest(self):
         """
         Test on dataset
+
+        Returns
+        -------
+        errors : NumPy Array
+            afhdjk
         """
         results = np.zeros(len(self.testData))
 
@@ -75,37 +104,62 @@ class Perceptron():
     
     def reset(self):
         """
-        IMPLEMENT
+        Resets the Perceptron to default values.
         """
         self.weights[:] = 0
         self.bias = 0
 
 
 def convertData(*files):
+    """
+    Returns list of arrays of data objects converted from provided data files (csv format).
+    
+    Parameters
+    ----------
+    *files : str
+        File names of desired text files containing data in csv format.
 
+    Returns
+    -------
+    dataArrays : list of NumPy Arrays
+        Arrays 
+    """
+    # NumPy random generator
     rng = np.random.default_rng()
+    # String conversion for last column
     convertFunc = lambda name: 1. if name == b"class-1" else (2. if name == b"class-2" else 3.)
 
-    ret = []
-
-    for fil in files:
-        
-        fileArray = np.genfromtxt(fil, delimiter=",", converters={4 : convertFunc})
+    # Conversion for file arguments
+    dataArrays = []
+    for f in files:
+        fileArray = np.genfromtxt(f, delimiter=",", converters={-1 : convertFunc})
         fileArray = rng.permutation(fileArray)
-
-        ret.append(fileArray)
-
-    return ret
+        dataArrays.append(fileArray)
+    return dataArrays
 
 
 def selectClasses(class1, class2, *fileArrays):
     """
-    """
-    ret = []
+    Returns list of arrays of data objects with allocation of 1 and -1 to desired classes.
 
+    Parameters
+    ----------
+    class1 : int [1, 2, 3]
+    class2 : int [1, 2, 3]
+        Desired classes, represented by their associated integer, to be compared in a binary perceptron.
+    *fileArrays : NumPy Arrays
+        sfadf
+    
+    Returns
+    -------
+    dataArrays : list of NumPy Arrays
+        asdjfhgj
+    """
+    dataArrays = []
     for arr in fileArrays:
         array = np.empty((0, 5))
         for row in arr:
+            # Allocation of 1 and -1 to desired classes and added to sub array.
             if row[-1] == class1:
                 arr = np.append(row[:-1], 1)
                 array = np.vstack((array, arr))
@@ -114,62 +168,57 @@ def selectClasses(class1, class2, *fileArrays):
                 array = np.vstack((array, arr))
             else:
                 pass
-        ret.append(array)
-    return ret
+        dataArrays.append(array)
+    return dataArrays
 
 
 
 if __name__ == "__main__":
 
-    
+    # Establish Variables
+    iterations = 20
+    runs = 20
+    classPairs = [(1, 2), (2, 3), (1, 3)]
 
+    # Establish tracking arrays
+    trainErrTot = np.zeros((iterations, len(classPairs)))
+    testErrTot = np.zeros(len(classPairs))
 
-    trainData, testData = convertData("train.data", "test.data")
+    # Number of runs
+    for run in range(runs):
+        # Grab data and permute (permutation different for each run)
+        trainData, testData = convertData("train.data", "test.data")
 
-    errors = []
-    testing = []
-    real = []
+        # Run through class pair comparisons
+        for pair in classPairs:
+            # Select correct data objects from permuted array
+            train, test = selectClasses(pair[0], pair[1], trainData, testData)
 
-    
+            # Establish perceptron
+            p = Perceptron(train, test)
 
-    # Class 1 and 2
-    train, test = selectClasses(1, 2, trainData, testData)
-    perc = Perceptron(train, test)
-    errors.append(perc.PerceptronTrain(20))
-    testing.append(perc.PerceptronTest())
-    real.append(perc.testData[:, -1])
-    perc.reset()
+            # TRAINING: Grab training errors across iterations and add to total.
+            trainErr = p.PerceptronTrain(iterations)
+            trainErrTot[:, classPairs.index(pair)] += trainErr[:]
 
-    # Class 2 and 3
-    train, test = selectClasses(2, 3, trainData, testData)
-    perc = Perceptron(train, test)
-    errors.append(perc.PerceptronTrain(20))
-    testing.append(perc.PerceptronTest())
-    real.append(perc.testData[:, -1])
-    perc.reset()
+            # TESTING: Compare predictions and reals class labels
+            testPredictions = p.PerceptronTest()
+            testReals = p.testData[:, -1]
+            testErrTot[classPairs.index(pair)] += 20 - np.count_nonzero(testPredictions == testReals)
 
-    # Class 1 and 3
-    train, test = selectClasses(1, 3, trainData, testData)
-    perc = Perceptron(train, test)
-    errors.append(perc.PerceptronTrain(20))
-    testing.append(perc.PerceptronTest())
-    real.append(perc.testData[:, -1])
-    
-    # Plot Errors in training
-    for err in errors:
-        plt.plot(err)
+            # Reset Perceptron
+            p.reset()
+
+    # Averages
+    trainErrAvg = trainErrTot/runs
+    testErrAvg = testErrTot/runs
+
+    # Plot training errors
+    plt.plot(trainErrAvg)
     plt.xlim(-1, 20)
     plt.xticks(np.arange(0, 20, step = 1))
+    plt.legend(classPairs)
     plt.show()
 
-
-    # Errors in testing
-    for test, real in zip(testing, real):
-        print("\n", test)
-        print(real)
-
-        print("Num. Errors: ", 20 - np.count_nonzero(test==real))
-
-    
-    
-
+    # Print testing errors
+    print("Average Number of Testing Errors: ", testErrAvg)
