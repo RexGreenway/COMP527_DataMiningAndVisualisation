@@ -32,11 +32,10 @@ class Perceptron():
         self.trainingData = trainingData
         self.testData = testData
 
-        # weights and bias
-        self.weights = np.zeros(4)
-        self.bias = 0
+        # weights inc bias
+        self.weights = np.zeros(5)
 
-    def PerceptronTrain(self, MaxIter):
+    def perceptronTrain(self, MaxIter):
         """
         Fit training data.
 
@@ -60,26 +59,27 @@ class Perceptron():
 
             # For each instance of the dataset
             for row in self.trainingData:
-                # Set Variables
-                X = row[:-1]        # add bias into X at position 0 with value x0 = 1??????
+                # Set Variables (with bias term at index 0 for input object)
+                X = np.insert(row[:-1], 0, [1])
                 y = row[-1]
 
                 # Activation score
-                a = np.dot(self.weights, X)  + self.bias
+                a = np.dot(self.weights, X)
 
                 # checking actiavtion score. (Make sure input data moves class labels to +1 and -1)
                 if a * y <= 0:
                     # If incorrect classification
                     error += 1
 
-                    self.bias += y                      # update bias
-                    self.weights[:] += y * X[:]         # update weights
+                    self.weights[0] += y                   # update bias
+                    self.weights[1:] += y * X[1:]          # update weights
+                    
             
             errors[i] = error
         
         return errors
 
-    def PerceptronTest(self):
+    def perceptronTest(self):
         """
         Test on dataset
 
@@ -91,11 +91,12 @@ class Perceptron():
         results = np.zeros(len(self.testData))
 
         for rowIndex in range(len(self.testData)):
-            # Grab instance
+            # Grab instance (with bias term at index 0)
             X = self.testData[rowIndex][:-1]
+            X = np.insert(X, 0, [1])
 
             # Activation Score
-            a = np.dot(self.weights, X) + self.bias
+            a = np.dot(self.weights, X)
 
             # Store result
             results[rowIndex] = np.sign(a)
@@ -107,7 +108,6 @@ class Perceptron():
         Resets the Perceptron to default values.
         """
         self.weights[:] = 0
-        self.bias = 0
 
 
 def convertData(*files):
@@ -177,7 +177,7 @@ if __name__ == "__main__":
 
     # Establish Variables
     iterations = 20
-    runs = 100
+    runs = 50
     classPairs = [(1, 2), (2, 3), (1, 3)]
 
     # Establish tracking arrays
@@ -198,11 +198,11 @@ if __name__ == "__main__":
             p = Perceptron(train, test)
 
             # TRAINING: Grab training errors across iterations and add to total
-            trainErr = p.PerceptronTrain(iterations)
+            trainErr = p.perceptronTrain(iterations)
             trainErrTot[:, classPairs.index(pair)] += trainErr[:]
 
             # TESTING: Compare predictions and reals class labels
-            testPredictions = p.PerceptronTest()
+            testPredictions = p.perceptronTest()
             testReals = p.testData[:, -1]
             testErrTot[classPairs.index(pair)] += 20 - np.count_nonzero(testPredictions == testReals)
 
@@ -223,4 +223,4 @@ if __name__ == "__main__":
     plt.show()
 
     # Print testing errors
-    print("Average Number of Testing Errors: ", 100*(testErrAvg/20))
+    print("Average Number of Testing Errors (%): ", 100*(testErrAvg/20))
