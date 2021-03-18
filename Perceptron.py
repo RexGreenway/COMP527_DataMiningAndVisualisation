@@ -61,7 +61,7 @@ class Perceptron():
             # For each instance of the dataset
             for row in self.trainingData:
                 # Set Variables
-                X = row[:-1]
+                X = row[:-1]        # add bias into X at position 0 with value x0 = 1??????
                 y = row[-1]
 
                 # Activation score
@@ -177,14 +177,14 @@ if __name__ == "__main__":
 
     # Establish Variables
     iterations = 20
-    runs = 20
+    runs = 100
     classPairs = [(1, 2), (2, 3), (1, 3)]
 
     # Establish tracking arrays
     trainErrTot = np.zeros((iterations, len(classPairs)))
     testErrTot = np.zeros(len(classPairs))
 
-    # Number of runs
+    # Running over multiple permutations to find an average.
     for run in range(runs):
         # Grab data and permute (permutation different for each run)
         trainData, testData = convertData("train.data", "test.data")
@@ -197,7 +197,7 @@ if __name__ == "__main__":
             # Establish perceptron
             p = Perceptron(train, test)
 
-            # TRAINING: Grab training errors across iterations and add to total.
+            # TRAINING: Grab training errors across iterations and add to total
             trainErr = p.PerceptronTrain(iterations)
             trainErrTot[:, classPairs.index(pair)] += trainErr[:]
 
@@ -217,8 +217,10 @@ if __name__ == "__main__":
     plt.plot(trainErrAvg)
     plt.xlim(-1, 20)
     plt.xticks(np.arange(0, 20, step = 1))
+    plt.xlabel("Iterations")
+    plt.ylabel("No. of Errors")
     plt.legend(classPairs)
     plt.show()
 
     # Print testing errors
-    print("Average Number of Testing Errors: ", testErrAvg)
+    print("Average Number of Testing Errors: ", 100*(testErrAvg/20))
